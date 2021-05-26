@@ -1,1 +1,4 @@
 .idea
+**/build
+**/tilt_modules
+**/helm/charts/**

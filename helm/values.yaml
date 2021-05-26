@@ -1,0 +1,19 @@
+replicaCount: 1
+image:
+imagePullSecrets:
+  - name: gcr-json-key
+app:
+  port: 80
+service:
+  type: ClusterIP
+  port: 80
+
+redis:
+  fullnameOverride: redis
+  auth:
+    password: secret
+  global:
+    storageClass: local-path
+  master:
+    service:
+      port: 6379

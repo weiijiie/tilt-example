@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 	"log"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 )
 
 type (
@@ -14,6 +17,19 @@ type (
 		Value string `json:"value" binding:"required"`
 	}
 )
+
+func ping(store Store) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		result, err := store.Ping(c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"msg": result})
+		return
+	}
+}
 
 func get(store Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -51,22 +67,28 @@ func set(store Store) gin.HandlerFunc {
 }
 
 func main() {
-	var port string
-	if isDev() {
-		port = os.Getenv("PORT")
-	} else {
-		port = "80"
-	}
-
+	port := os.Getenv("PORT")
 	redisAddr := os.Getenv("REDIS_ADDR")
-	if port == "" || redisAddr == "" {
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	if port == "" || redisAddr == "" || redisPassword == "" {
 		panic("config not set properly")
 	}
 
-	store := NewStore(redisAddr)
+	store := NewStore(redisAddr, redisPassword)
+	go func() {
+		for range time.Tick(5 * time.Second) {
+			ctx := context.Background()
+			res, err := store.Ping(ctx)
+			if err != nil {
+				log.Printf("heartbeat failed, err: %s", err.Error())
+			}
+			log.Printf("heartbeat: %s...", res)
+		}
+	}()
 
 	router := gin.Default()
 
+	router.GET("/", ping(store))
 	router.GET("/:key", get(store))
 	router.POST("/:key", set(store))
 
@@ -77,8 +99,4 @@ func main() {
 	if err := router.Run(":" + port); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func isDev() bool {
-	return os.Getenv("IS_DEV") == "true"
 }

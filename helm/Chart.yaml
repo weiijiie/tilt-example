@@ -1,0 +1,10 @@
+apiVersion: v2
+name: skaffold-demo
+description: Helm chart for Skaffold demo
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+dependencies:
+  - name: redis
+    version: "14.1.1"
+    repository: "https://charts.bitnami.com/bitnami"

@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skaffold-demo
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: skaffold-demo
+  template:
+    metadata:
+      labels:
+        app: skaffold-demo
+    spec:
+     {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+       {{- toYaml . | nindent 8 }}
+     {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.image }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.app.port }}
+              protocol: TCP
+          env:
+            - name: REDIS_ADDR
+              value: {{ printf "%s-master:%.0f" .Values.redis.fullnameOverride .Values.redis.master.service.port }}
+            - name: REDIS_PASSWORD
+              value: {{ .Values.redis.auth.password }}
+            - name: PORT
+              value: {{ .Values.app.port | quote }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"

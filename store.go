@@ -9,14 +9,20 @@ type Store struct {
 	client *redis.Client
 }
 
-func NewStore(addr string) Store {
+func NewStore(addr, password string) Store {
+	client := redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: password,
+		DB:       0,
+	})
+
 	return Store{
-		client: redis.NewClient(&redis.Options{
-			Addr:     addr,
-			Password: "",
-			DB:       0,
-		}),
+		client: client,
 	}
+}
+
+func (s Store) Ping(c context.Context) (string, error) {
+	return s.client.Ping(c).Result()
 }
 
 func (s Store) Get(c context.Context, key string) (string, error) {

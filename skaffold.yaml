@@ -1,0 +1,17 @@
+apiVersion: skaffold/v2beta16
+kind: Config
+build:
+  artifacts:
+    - image: asia.gcr.io/atomicloud/local-dev
+deploy:
+  helm:
+    releases:
+      - name: skaffold-demo
+        chartPath: helm
+        artifactOverrides:
+          image: asia.gcr.io/atomicloud/local-dev
+        valuesFiles:
+          - helm/values.yaml
+        skipBuildDependencies: true
+portForward:
+
