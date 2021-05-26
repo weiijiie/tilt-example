@@ -11,8 +11,9 @@ local_resource(
 docker_build_with_restart(
     image,
     '.',
-    entrypoint='/app/build/demo-app',
-    live_update=[sync('.', '/app')]
+    entrypoint='/app/demo-app',
+    only=['./build'],
+    live_update=[sync('./build', '/app')]
 )
 
 k8s_yaml(helm(
