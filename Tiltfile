@@ -20,8 +20,13 @@ k8s_yaml(helm(
     './helm',
     set=['image=%s' % image]
 ))
-k8s_resource('skaffold-demo',
+k8s_resource('tilt-demo',
     port_forwards=8080,
     resource_deps=['compile']
 )
-
+local_resource(
+    'test',
+    ['./test_endpoints.sh'],
+    deps=['./test_endpoints.sh'],
+    resource_deps=['tilt-demo']
+)

@@ -1,3 +1,4 @@
+name: tilt-demo
 replicaCount: 1
 image:
 imagePullSecrets:

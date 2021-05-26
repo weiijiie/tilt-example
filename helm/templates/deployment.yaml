@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: skaffold-demo
+  name: {{ .Values.name }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: skaffold-demo
+      app: {{ .Values.name }}
   template:
     metadata:
       labels:
-        app: skaffold-demo
+        app: {{ .Values.name }}
     spec:
      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
