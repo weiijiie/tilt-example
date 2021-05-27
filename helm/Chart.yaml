@@ -1,5 +1,5 @@
 apiVersion: v2
-name: skaffold-demo
+name: tilt-demo
 description: Helm chart for Skaffold demo
 type: application
 version: 0.1.0
