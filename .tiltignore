@@ -3,3 +3,7 @@
 
 # for Tiltfile formatter temporary files
 Tilefile.*
+
+# for helm dependencies
+**/charts
+**/tmpcharts
