@@ -5,16 +5,23 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type (
 	SetRequest struct {
 		Value string `json:"value" binding:"required"`
+	}
+
+	Config struct {
+		Port          int    `default:"3000"`
+		RedisAddr     string `required:"true" split_words:"true"`
+		RedisPassword string `required:"true" split_words:"true"`
 	}
 )
 
@@ -67,14 +74,13 @@ func set(store Store) gin.HandlerFunc {
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	redisAddr := os.Getenv("REDIS_ADDR")
-	redisPassword := os.Getenv("REDIS_PASSWORD")
-	if port == "" || redisAddr == "" || redisPassword == "" {
-		panic("config not set properly")
+	var conf Config
+	err := envconfig.Process("", &conf)
+	if err != nil {
+		panic(err.Error())
 	}
 
-	store := NewStore(redisAddr, redisPassword)
+	store := NewStore(conf.RedisAddr, conf.RedisPassword)
 	go func() {
 		for range time.Tick(5 * time.Second) {
 			ctx := context.Background()
@@ -92,11 +98,7 @@ func main() {
 	router.GET("/:key", get(store))
 	router.POST("/:key", set(store))
 
-	if port == "" {
-		panic("`PORT` env var not set")
-	}
-
-	if err := router.Run(":" + port); err != nil {
+	if err := router.Run(":" + strconv.Itoa(conf.Port)); err != nil {
 		log.Fatal(err)
 	}
 }

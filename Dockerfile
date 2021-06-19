@@ -1,6 +1,14 @@
-FROM alpine
-RUN apk --no-cache add ca-certificates
+FROM tiltdev/entr AS helper
+
+FROM golang:alpine
+
+COPY --from=helper /tilt-restart-wrapper /usr/local/bin/entr /
+RUN date > /.restart-process
 
 WORKDIR /app
-COPY build ./
+COPY go.* ./
+RUN go mod download
+
+COPY *.go ./
+RUN GOOS=linux GOARCH=amd64 go build -o demo-app .
 ENTRYPOINT ["/app/demo-app"]
