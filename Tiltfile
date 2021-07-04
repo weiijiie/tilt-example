@@ -13,11 +13,24 @@ def helm_dep_up(path_to_helm_dir):
         local('helm dep update %s' % path_to_helm_dir)
 
 
-image = 'asia.gcr.io/atomicloud/local-dev'
+image = 'asia-southeast1-docker.pkg.dev/atomicloud/dev/remote-dev-example'
+os.putenv("IMAGE_CACHE_REF", "%s:%s" % (image, "buildcache"))
 
 custom_build(
     image,
-    'docker buildx build --platform=linux/amd64 -t $EXPECTED_REF --push .',
+    '''buildctl \
+        --addr tcp://10.43.65.128:1234 \
+        --tlscacert certs/client/ca.pem \
+        --tlscert certs/client/cert.pem \
+        --tlskey certs/client/key.pem \
+        build \
+        --frontend=dockerfile.v0 \
+        --local context=. \
+        --local dockerfile=. \
+        --output type=image,name=$EXPECTED_REF,push=true \
+        --export-cache type=registry,ref=$IMAGE_CACHE_REF \
+        --import-cache type=registry,ref=$IMAGE_CACHE_REF
+    ''',
     entrypoint='/tilt-restart-wrapper --watch_file="/.restart-process" /app/demo-app',
     deps=['.'],
     live_update=[
